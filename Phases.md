@@ -58,14 +58,14 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
   - [x] **Pipe Operation Support**: The system supports pipe operations (`|`) for data flow between commands.
 
 
-## Phase 5,Multi-Provider SDK (In Progress)
-**Objective** Implement Provider interface; add OpenAI, Claude, and Ollama support.
+## Phase 5: Multi-Provider SDK & Smart Context - (Completed)
+**Objective** Implement Provider interface; add OpenAI, Claude, and Ollama support with context awareness.
 
 **Milestones**:
-
-  - [ ] **Provider Interface**: Implement the `Provider` interface to standardize LLM interactions.
-  - [ ] **OpenAI Provider**: Add support for OpenAI via the OpenAI API.
-  - [ ] **Expandable Interface: Keep the interface open for future providers.
+  - [x] **Expandable Interface**: Keep the interface open for future providers (Claude added).
+  - [x] **Context aware**: Added  `--directory`local file availability to LLM context to prevent hallucinations.
+  - [x] **Context from clipboard**: Allow the user to copy using `--clipboard` flag.
+  - [x] **Anthropic Provider**: Implemented Claude API support.
 
 
 
@@ -73,7 +73,7 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
 **Objective** Launch --compare flag with a side-by-side TUI for voting on results.
 
 **Milestones**:
-
+  - [ ] **Add Metrics**: need to add metrics like `token usage`, `time taken`, `cost` etc. 
   - [ ] **TUI Implementation**: Implement a side-by-side TUI for voting on results.
 
 

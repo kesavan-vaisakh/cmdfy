@@ -8,18 +8,24 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/atotto/clipboard"
+	"github.com/spf13/cobra"
+
 	"github.com/kesavan-vaisakh/cmdfy/pkg/config"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
-	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/gemini" // Register Gemini provider
-	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/ollama" // Register Ollama provider
-	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/openai" // Register OpenAI provider
+	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/anthropic" // Register Anthropic provider
+	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/gemini"    // Register Gemini provider
+	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/ollama"    // Register Ollama provider
+	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/openai"    // Register OpenAI provider
 	"github.com/kesavan-vaisakh/cmdfy/pkg/system"
-	"github.com/spf13/cobra"
 )
 
 var (
-	executeFlag  bool
-	providerFlag string
+	executeFlag   bool
+	configFile    string
+	providerFlag  string
+	clipboardFlag bool
+	directoryFlag string
 )
 
 var rootCmd = &cobra.Command{
@@ -29,6 +35,16 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := strings.Join(args, " ")
+
+		if clipboardFlag {
+			content, err := clipboard.ReadAll()
+			if err == nil && content != "" {
+				query = fmt.Sprintf("%s\n\nContext from Clipboard:\n%s", query, content)
+				fmt.Println("📋 Added clipboard content to context.")
+			} else if err != nil {
+				fmt.Printf("⚠️  Failed to read clipboard: %v\n", err)
+			}
+		}
 
 		// Load Config
 		cfg, err := config.LoadConfig()
@@ -87,18 +103,15 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Context
-		availableCommands, err := system.GetAvailableCommands()
-		if err != nil {
-			// On error, just log warning and proceed without commands?
-			// Or maybe the list is just empty.
-			// For now, let's just proceed with empty list to avoid blocking user.
-			// potentially log to debug if we had a logger.
-		}
+		// Gather system metadata
+		commands, _ := system.GetAvailableCommands()
+		files, _ := system.GetFileContext(directoryFlag)
 
 		meta := llm.SystemMetadata{
 			OS:                runtime.GOOS,
 			Shell:             os.Getenv("SHELL"),
-			AvailableCommands: availableCommands,
+			AvailableCommands: commands,
+			CurrentDirFiles:   files,
 		}
 		if meta.Shell == "" {
 			// Fallback for Windows or unknown
@@ -195,6 +208,11 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVarP(&executeFlag, "execute", "y", false, "Execute the generated command immediately")
-	rootCmd.Flags().StringVarP(&providerFlag, "provider", "p", "", "Override configured provider")
+	rootCmd.PersistentFlags().BoolVarP(&executeFlag, "execute", "y", false, "Execute the generated command immediately")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.cmdfy/config.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&providerFlag, "provider", "p", "", "Override the LLM provider (e.g., gemini, ollama)")
+	rootCmd.PersistentFlags().BoolVarP(&clipboardFlag, "clipboard", "c", false, "Include clipboard content as context")
+	rootCmd.PersistentFlags().StringVarP(&directoryFlag, "directory", "d", ".", "Target directory for context scanning")
+
+	rootCmd.AddCommand(configCmd)
 }

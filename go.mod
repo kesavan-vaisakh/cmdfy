@@ -3,6 +3,7 @@ module github.com/kesavan-vaisakh/cmdfy
 go 1.24.1
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/spf13/cobra v1.9.1
 	google.golang.org/genai v1.41.0

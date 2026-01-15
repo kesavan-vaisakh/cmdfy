@@ -45,6 +45,7 @@ func NewOpenAIProvider(cfg llm.ProviderConfig) (llm.Provider, error) {
 // GenerateCommand generates a command using OpenAI
 func (p *OpenAIProvider) GenerateCommand(ctx context.Context, query string, meta llm.SystemMetadata) (*model.CommandResult, error) {
 	commandsList := strings.Join(meta.AvailableCommands, ", ")
+	filesList := strings.Join(meta.CurrentDirFiles, ", ")
 	prompt := fmt.Sprintf(`
 You are a command line expert. 
 Your task is to translate the following natural language request into a shell command or a pipeline of commands.
@@ -64,8 +65,9 @@ Respond ONLY with a valid JSON object matching this schema:
 Operating System: %s
 Shell: %s
 Available Tools: %s
+Current Directory Files: %s
 Request: %s
-`, meta.OS, meta.Shell, commandsList, query)
+`, meta.OS, meta.Shell, commandsList, filesList, query)
 
 	resp, err := p.client.CreateChatCompletion(
 		ctx,

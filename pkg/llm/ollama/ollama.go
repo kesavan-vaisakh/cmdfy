@@ -58,6 +58,7 @@ func (p *OllamaProvider) GenerateCommand(ctx context.Context, query string, meta
 	}
 
 	commandsList := strings.Join(meta.AvailableCommands, ", ")
+	filesList := strings.Join(meta.CurrentDirFiles, ", ")
 	prompt := fmt.Sprintf(`
 You are a command line expert. 
 Your task is to translate the following natural language request into a shell command or a pipeline of commands.
@@ -77,8 +78,9 @@ Respond ONLY with a valid JSON object matching this schema:
 Operating System: %s
 Shell: %s
 Available Tools: %s
+Current Directory Files: %s
 Request: %s
-`, meta.OS, meta.Shell, commandsList, query)
+`, meta.OS, meta.Shell, commandsList, filesList, query)
 
 	reqBody := ChatRequest{
 		Model: p.model,

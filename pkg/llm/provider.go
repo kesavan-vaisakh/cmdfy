@@ -12,6 +12,7 @@ type SystemMetadata struct {
 	OS                string
 	Shell             string
 	AvailableCommands []string
+	CurrentDirFiles   []string
 }
 
 // Provider defines the interface for an LLM provider
