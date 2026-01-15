@@ -56,4 +56,36 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
   - [x] **Pipeline Data Structure**: Implemented `CommandResult` and `CommandStep` to represent sequences and operators.
   - [x] **Sequential Execution**: The CLI correctly assembles merged commands using operators (`&&`, `;`).
   - [x] **Pipe Operation Support**: The system supports pipe operations (`|`) for data flow between commands.
-  - [x] **Final Polish**: The tool is now feature-complete for the core objectives.
+
+
+## Phase 5,Multi-Provider SDK (In Progress)
+**Objective** Implement Provider interface; add OpenAI, Claude, and Ollama support.
+
+**Milestones**:
+
+  - [ ] **Provider Interface**: Implement the `Provider` interface to standardize LLM interactions.
+  - [ ] **OpenAI Provider**: Add support for OpenAI via the OpenAI API.
+  - [ ] **Expandable Interface: Keep the interface open for future providers.
+
+
+
+## Phase 6,Benchmarking Mode
+**Objective** Launch --compare flag with a side-by-side TUI for voting on results.
+
+**Milestones**:
+
+  - [ ] **TUI Implementation**: Implement a side-by-side TUI for voting on results.
+
+
+## Phase 7,"Local ""Brain""",Allow cmdfy to learn from your picks to improve the local NLP accuracy.
+
+**Objective** Allow cmdfy to learn from your picks to improve the local NLP accuracy.
+
+**Milestones**:
+
+  - [ ] **Local Brain Implementation**: Implement a local brain to learn from your picks to improve the local NLP accuracy.
+
+## Phase Futures will plan after completion of Phase 6
+**Milestones**:
+
+  - [ ] **Future Planning**: Plan for future features and improvements.
