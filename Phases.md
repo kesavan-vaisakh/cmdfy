@@ -6,56 +6,54 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
 
 -----
 
-## Phase 1: Minimal Viable Product (MVP) - (In Progress)
+## Phase 1: Minimal Viable Product (MVP) - (Completed)
 
-**Objective**: Build a basic, functional tool that translates simple natural language requests into `ffmpeg` commands using an external LLM.
-
-**Milestones**:
-
-  - [ ] **Core CLI**: Implement the `cmdfy` command with flag parsing (`--config`, `-y`).
-  - [ ] **LLM Integration**: Successfully integrate the Gemini API via the Go SDK to receive a generated command string.
-  - [ ] **Basic FFmpeg Generation**: The tool can interpret simple requests (e.g., "convert `input.mp4` to `output.avi`") and generate a valid command.
-  - [ ] **Configuration Management**: A secure method to store the Gemini API key.
-  - [ ] **Execution Logic**: The `-y` flag correctly executes the generated command.
-
------
-
-## Phase 2: Localized NLP System
-
-**Objective**: Introduce a local, rule-based NLP engine as an alternative to the LLM, providing offline capability and predictable behavior.
+**Objective**: Build a basic, functional tool that translates simple natural language requests into shell commands using an external LLM.
 
 **Milestones**:
 
-  - [ ] **Parser Redesign**: Re-architect the parser to handle a rule-based system instead of relying on the LLM's output.
-  - [ ] **Keyword Mapping**: Create a Go-based mapping system that links keywords (e.g., "resize," "fps") to `ffmpeg` flags and filters.
-  - [ ] **Engine Selection**: The `--config` flag allows a user to switch between the LLM and the new local NLP engine.
-  - [ ] **Feature Parity (MVP)**: The local engine can handle all commands supported by the Phase 1 MVP.
-  - [ ] **Robust Error Handling**: Provide clear, user-friendly error messages when the local engine cannot parse a request.
+  - [x] **Core CLI**: Implement the `cmdfy` command with flag parsing (`--config`, `-y`).
+  - [x] **LLM Integration**: Successfully integrate the Gemini API via the Go SDK to receive a generated command string.
+  - [x] **Basic Command Generation**: The tool can interpret simple requests (e.g., "convert `input.mp4` to `output.avi`") and generate a valid command. (General purpose)
+  - [x] **Configuration Management**: A secure method to store the Gemini API key.
+  - [x] **Execution Logic**: The `-y` flag correctly executes the generated command.
 
 -----
 
-## Phase 3: Command Agnostic Architecture
+## Phase 2: Local LLM Support (Ollama) - (Completed)
 
-**Objective**: Expand the tool's capabilities by building a flexible architecture that supports multiple command-line tools.
+**Objective**: Introduce local LLM support via Ollama, providing offline capability, privacy, and cost savings.
 
 **Milestones**:
 
-  - [ ] **Tool Abstraction Layer**: Implement a new system (`tool_registry`) that decouples parsing from command generation.
-  - [ ] **Generic Request Object**: The parser now generates a tool-agnostic request object (e.g., `CommandRequest`).
-  - [ ] **New Tool Rules**: Add rule sets for at least two new tools (e.g., `git`, `imagemagick`).
-  - [ ] **Tool Inference**: The system can infer the correct tool based on context (e.g., file extension for `ffmpeg` or `imagemagick`).
-  - [ ] **Configurable Rules**: The rule sets for each tool are easily extensible (e.g., by using a separate file or a new Go package).
+  - [x] **Ollama Provider**: Implement the `ollama` provider in `pkg/llm/ollama` using the Ollama API.
+  - [x] **Configuration Update**: Update the CLI to support setting the usage of a local model and custom base URL (default: `http://localhost:11434`).
+  - [x] **Model Selection**: Allow the user to specify which local model to use (e.g., `llama3`, `mistral`).
+  - [x] **Verification**: Ensure seamless switching between Cloud (Gemini/OpenAI) and Local (Ollama) execution.
 
 -----
 
-## Phase 4: Command Merging & Piping
+## Phase 3: Structured Command Architecture - (Completed)
+
+**Objective**: Expand the tool's capabilities by building a flexible architecture that supports multiple command-line tools and structured output.
+
+**Milestones**:
+
+  - [x] **Structured Models**: Define `GeneratedCommand` struct to hold tool, args, explanation, and danger status.
+  - [x] **LLM Interface Update**: Update `Provider` interface to return structured data instead of raw strings.
+  - [x] **JSON Prompting**: Update prompts to request JSON output from all providers (Gemini, OpenAI, Ollama).
+  - [x] **CLI Updates**: Update `cmdfy` CLI to parse and display structured output nicely.
+
+-----
+
+## Phase 4: Command Merging & Piping - (Completed)
 
 **Objective**: Complete the project by adding support for advanced command-line operations, allowing for multi-step tasks.
 
 **Milestones**:
 
-  - [ ] **Multi-Stage Parser**: The parser can recognize multi-stage commands using keywords like "and," "then," and the `|` symbol.
-  - [ ] **Pipeline Data Structure**: A new data structure is created to represent a sequence of commands and their relationships (`Pipeline`).
-  - [ ] **Sequential Execution**: The generator correctly assembles merged commands using appropriate separators (e.g., `;`).
-  - [ ] **Pipe Operation Support**: The generator can create command strings with pipe operations (`|`) where the output of one command is directed to the input of another.
-  - [ ] **Final Polish & Documentation**: Comprehensive documentation on all supported commands, syntax, and features.
+  - [x] **Multi-Stage Parser**: The parser (LLM) recognizes multi-stage commands and breaks them into steps.
+  - [x] **Pipeline Data Structure**: Implemented `CommandResult` and `CommandStep` to represent sequences and operators.
+  - [x] **Sequential Execution**: The CLI correctly assembles merged commands using operators (`&&`, `;`).
+  - [x] **Pipe Operation Support**: The system supports pipe operations (`|`) for data flow between commands.
+  - [x] **Final Polish**: The tool is now feature-complete for the core objectives.

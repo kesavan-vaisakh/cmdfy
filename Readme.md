@@ -1,48 +1,3 @@
-# 🚀 cmdfy: The Command Agnostic CLI
-
-**cmdfy** is a powerful command-line interface that translates natural language requests into executable shell commands. Built with Go, it aims to streamline your workflow by abstracting away complex command-line syntax, allowing you to focus on your task, not the tool.
-
------
-
-## ✨ Features
-
-  - **Natural Language to Command Translation**: Generate complex commands by simply describing your intent in plain English.
-  - **Configurable Engine**: Choose between a powerful LLM-based engine (like Gemini) for maximum flexibility or a fast, local NLP engine for offline, deterministic behavior.
-  - **Tool Agnostic**: Extensible architecture designed to support multiple command-line tools beyond just `ffmpeg`, including `git`, `imagemagick`, and more.
-  - **Command Chaining & Piping**: Seamlessly merge and pipe commands to execute complex multi-step operations.
-
------
-
-## 🛠️ Installation
-
-**Prerequisites**:
-
-  - Go 1.22 or higher
-  - A Gemini API key (optional, for LLM mode)
-
-**From Source**:
-
-1.  Clone the repository:
-    ```sh
-    git clone https://github.com/your-username/cmdfy.git
-    cd cmdfy
-    ```
-2.  Build the executable:
-    ```sh
-    go build -o cmdfy ./cmd/cmdfy
-    ```
-3.  Add the executable to your system's `PATH` for global access.
-
------
-
-## 🚀 Usage
-
-### 1\. Configuration
-
-Before first use, configure your preferred command generation engine.
-
-```sh
-# To use the LLM-based engine:
 ./cmdfy --config llm-gemini --api-key YOUR_GEMINI_API_KEY
 
 # To use the local NLP engine:
@@ -70,15 +25,34 @@ Use the `-y` flag to execute the command immediately after it's generated.
 ./cmdfy -y "convert video.mov to a 720p version called video_720.mp4"
 ```
 
+### Build from Source
+
+You can build the binary for your current system using `go build`:
+
+```bash
+git clone https://github.com/kesavan-vaisakh/cmdfy.git
+cd cmdfy
+go build -o cmdfy app/main.go
+# Move to your PATH
+mv cmdfy /usr/local/bin/
+```
+
+Or use the `Makefile` to cross-compile for all supported platforms:
+
+```bash
+make build-all
+# Output binaries will be in the bin/ directory
+```
+
 -----
 
-## 🗺️ Project Roadmap
+## Project Roadmap
 
 This project is being developed in a phased approach. For a detailed breakdown of each phase, its milestones, and a more in-depth architectural overview, please see our dedicated **Phases Document**.
 
 -----
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions\! Please refer to the **Phases Document** for information on what we're currently working on and how you can get involved.
 
