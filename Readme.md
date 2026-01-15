@@ -6,6 +6,8 @@
 
 ### Install via Go Install
 
+
+
 If you have Go installed, the easiest way to install **cmdfy** is using `go install`:
 
 ```bash
