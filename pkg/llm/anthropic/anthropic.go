@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/model"
 )
@@ -68,6 +70,10 @@ type MessagesResponse struct {
 		Text string `json:"text"`
 		Type string `json:"type"`
 	} `json:"content"`
+	Usage struct {
+		InputTokens  int `json:"input_tokens"`
+		OutputTokens int `json:"output_tokens"`
+	} `json:"usage"`
 	Error *struct {
 		Type    string `json:"type"`
 		Message string `json:"message"`
@@ -126,6 +132,8 @@ Current Directory Files: %s
 	req.Header.Set("x-api-key", p.apiKey)
 	req.Header.Set("anthropic-version", apiVersion)
 
+	startTime := time.Now()
+
 	resp, err := p.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
@@ -145,6 +153,8 @@ Current Directory Files: %s
 	if err := json.Unmarshal(bodyBytes, &response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
+
+	latency := time.Since(startTime)
 
 	if response.Error != nil {
 		return nil, fmt.Errorf("anthropic api error: %s - %s", response.Error.Type, response.Error.Message)
@@ -166,6 +176,11 @@ Current Directory Files: %s
 	var result model.CommandResult
 	if err := json.Unmarshal([]byte(text), &result); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w\nResponse was: %s", err, text)
+	}
+
+	result.Metrics = model.Metrics{
+		Latency:    latency.Round(time.Millisecond).String(),
+		TokenCount: response.Usage.InputTokens + response.Usage.OutputTokens,
 	}
 
 	return &result, nil

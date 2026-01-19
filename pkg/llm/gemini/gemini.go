@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/model"
@@ -71,10 +72,15 @@ Current Directory Files: %s
 Request: %s
 `, meta.OS, meta.Shell, commandsList, filesList, query)
 
+	// Capture start time
+	startTime := time.Now()
+
 	resp, err := p.client.Models.GenerateContent(ctx, p.model, genai.Text(prompt), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate content: %w", err)
 	}
+
+	latency := time.Since(startTime)
 
 	if len(resp.Candidates) == 0 {
 		return nil, fmt.Errorf("no response candidates received")
@@ -96,6 +102,15 @@ Request: %s
 	var cmd model.CommandResult
 	if err := json.Unmarshal([]byte(result), &cmd); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w. raw: %s", err, result)
+	}
+
+	// Populate Metrics
+	cmd.Metrics = model.Metrics{
+		Latency: latency.Round(time.Millisecond).String(),
+		// TokenCount: TODO: extract from UsageMetadata if available
+	}
+	if resp.UsageMetadata != nil {
+		cmd.Metrics.TokenCount = int(resp.UsageMetadata.TotalTokenCount)
 	}
 
 	return &cmd, nil

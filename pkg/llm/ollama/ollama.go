@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/model"
 )
@@ -30,9 +32,11 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	Model   string      `json:"model"`
-	Message ChatMessage `json:"message"`
-	Done    bool        `json:"done"`
+	Model      string      `json:"model"`
+	Message    ChatMessage `json:"message"`
+	Done       bool        `json:"done"`
+	EvalCount  int         `json:"eval_count"`
+	TotalQueue int         `json:"total_duration"` // nanoseconds
 }
 
 func init() {
@@ -103,6 +107,8 @@ Request: %s
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	startTime := time.Now()
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -120,6 +126,8 @@ Request: %s
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	latency := time.Since(startTime)
+
 	result := strings.TrimSpace(chatResp.Message.Content)
 	// Strip markdown code blocks
 	result = strings.TrimPrefix(result, "```json")
@@ -136,6 +144,11 @@ Request: %s
 	var cmd model.CommandResult
 	if err := json.Unmarshal([]byte(result), &cmd); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w. raw: %s", err, result)
+	}
+
+	cmd.Metrics = model.Metrics{
+		Latency:    latency.Round(time.Millisecond).String(),
+		TokenCount: chatResp.EvalCount,
 	}
 
 	return &cmd, nil

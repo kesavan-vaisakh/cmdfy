@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"time"
+
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/model"
 	openai "github.com/sashabaranov/go-openai"
@@ -69,6 +71,8 @@ Current Directory Files: %s
 Request: %s
 `, meta.OS, meta.Shell, commandsList, filesList, query)
 
+	startTime := time.Now()
+
 	resp, err := p.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
@@ -92,6 +96,8 @@ Request: %s
 		return nil, fmt.Errorf("failed to generate content: %w", err)
 	}
 
+	latency := time.Since(startTime)
+
 	if len(resp.Choices) == 0 {
 		return nil, fmt.Errorf("no response choices received")
 	}
@@ -105,6 +111,11 @@ Request: %s
 	var cmd model.CommandResult
 	if err := json.Unmarshal([]byte(result), &cmd); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w. raw: %s", err, result)
+	}
+
+	cmd.Metrics = model.Metrics{
+		Latency:    latency.Round(time.Millisecond).String(),
+		TokenCount: resp.Usage.TotalTokens,
 	}
 
 	return &cmd, nil

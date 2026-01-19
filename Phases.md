@@ -73,8 +73,9 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
 **Objective** Launch --compare flag with a side-by-side TUI for voting on results.
 
 **Milestones**:
-  - [ ] **Add Metrics**: need to add metrics like `token usage`, `time taken`, `cost` etc. 
-  - [ ] **TUI Implementation**: Implement a side-by-side TUI for voting on results.
+  - [x] **Config update**: update the config to allow multiple providers to be used in benchmarking mode.
+  - [x] **Add Metrics**: need to add metrics like `token usage`, `time taken`, `cost` etc. 
+  - [x] **TUI Implementation**: Implement a side-by-side TUI for voting on results.
 
 
 ## Phase 7,"Local ""Brain""",Allow cmdfy to learn from your picks to improve the local NLP accuracy.
