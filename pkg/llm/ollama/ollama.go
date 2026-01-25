@@ -29,6 +29,7 @@ type ChatRequest struct {
 	Model    string        `json:"model"`
 	Messages []ChatMessage `json:"messages"`
 	Stream   bool          `json:"stream"`
+	Format   string        `json:"format,omitempty"`
 }
 
 type ChatResponse struct {
@@ -60,39 +61,53 @@ func (p *OllamaProvider) GenerateCommand(ctx context.Context, query string, meta
 	if p.model == "" {
 		p.model = "llama3" // Default
 	}
-
+	// Limit available commands to avoid overwhelming the context
+	maxCommands := 50
+	truncated := false
+	if len(meta.AvailableCommands) > maxCommands {
+		meta.AvailableCommands = meta.AvailableCommands[:maxCommands]
+		truncated = true
+	}
 	commandsList := strings.Join(meta.AvailableCommands, ", ")
-	filesList := strings.Join(meta.CurrentDirFiles, ", ")
+
+	availableToolsSuffix := ""
+	if truncated {
+		availableToolsSuffix = " (and others)"
+	}
+
 	prompt := fmt.Sprintf(`
-You are a command line expert. 
+You are a command line expert.
 Your task is to translate the following natural language request into a shell command or a pipeline of commands.
-Respond ONLY with a valid JSON object matching this schema:
+You MUST return a JSON object with strictly these fields: "steps", "explanation", "dangerous".
+Do NOT list files or answer the question directly. Generate the command to do it.
+
+Schema:
 {
   "steps": [
     {
-      "tool": "string (the primary command, e.g. git, grep)",
-      "args": ["string", "arguments"],
-      "op": "string (operator to connect to next step: | (pipe), && (and), ; (seq), || (or), > (redirect), >> (append). Empty for last step.)"
+      "tool": "string",
+      "args": ["string"],
+      "op": "string"
     }
   ],
-  "explanation": "string (brief explanation of the entire pipeline)",
-  "dangerous": boolean (true if ANY step modifies files significantly, deletes data, or has destructive side effects)
+  "explanation": "string",
+  "dangerous": boolean
 }
 
 Operating System: %s
 Shell: %s
-Available Tools: %s
-Current Directory Files: %s
+Available Tools: %s%s
 Request: %s
-`, meta.OS, meta.Shell, commandsList, filesList, query)
+`, meta.OS, meta.Shell, commandsList, availableToolsSuffix, query)
 
 	reqBody := ChatRequest{
 		Model: p.model,
 		Messages: []ChatMessage{
-			{Role: "system", Content: "You are a helpful assistant that generates structured shell commands in JSON. Do not output anything other than JSON."},
+			{Role: "system", Content: "You are a helpful assistant that generates structured shell commands in JSON. Use the schema provided."},
 			{Role: "user", Content: prompt},
 		},
 		Stream: false,
+		Format: "json",
 	}
 
 	jsonData, err := json.Marshal(reqBody)
