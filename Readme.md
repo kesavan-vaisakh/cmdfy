@@ -1,6 +1,6 @@
 # cmdfy: Turn Natural Language into Shell Commands
 
-**cmdfy** is a command-line tool that translates natural language requests into executable shell commands. It leverages Large Language Models (LLMs) like Gemini, OpenAI, and local options via Ollama to generate accurate commands tailored to your operating system's context.
+**cmdfy** is a command-line tool that translates natural language requests into executable shell commands. It leverages Large Language Models (LLMs) like Gemini, OpenAI, and local options via Ollama to generate accurate commands tailored to your operating system's context. Designed to be lightweight and privacy-focused alternative to cloud-based AI shells
 
 ## Installation
 
@@ -76,6 +76,8 @@ Use the `-y` flag to execute the command immediately after it's generated.
 # Be careful! This runs the command directly.
 ./cmdfy -y "convert video.mov to a 720p version called video_720.mp4"
 ```
+
+
 
 ## Project Roadmap
 
