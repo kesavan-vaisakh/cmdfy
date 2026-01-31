@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"runtime"
@@ -16,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/kesavan-vaisakh/cmdfy/app/tui"
+	"github.com/kesavan-vaisakh/cmdfy/pkg/brain"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/config"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/llm"
 	_ "github.com/kesavan-vaisakh/cmdfy/pkg/llm/anthropic" // Register Anthropic provider
@@ -65,11 +67,41 @@ var rootCmd = &cobra.Command{
 		commands, _ := system.GetAvailableCommands()
 		files, _ := system.GetFileContext(directoryFlag)
 
+		// Capture Stdin (Previous Error)
+		var previousError string
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) == 0 {
+			input, _ := io.ReadAll(os.Stdin)
+			previousError = string(input)
+
+			// Truncate to avoid blowing up context window (e.g. 2000 chars)
+			// We usually want the END of the error log, as that's where the actual error is.
+			maxLength := 2000
+			if len(previousError) > maxLength {
+				previousError = "...(truncated)..." + previousError[len(previousError)-maxLength:]
+			}
+
+			if previousError != "" {
+				fmt.Println("Context detected from stdin (Error Fix Mode)")
+			}
+		}
+
+		// Initialize Brain
+		var examples []brain.BrainEntry
+		b, err := brain.NewBrain()
+		if err == nil {
+			examples, _ = b.GetExamples(query, 5)
+		} else {
+			fmt.Printf("Warning: Failed to initialize brain: %v\n", err)
+		}
+
 		meta := llm.SystemMetadata{
 			OS:                runtime.GOOS,
 			Shell:             os.Getenv("SHELL"),
 			AvailableCommands: commands,
 			CurrentDirFiles:   files,
+			PreviousError:     previousError,
+			FewShotExamples:   examples,
 		}
 		if meta.Shell == "" {
 			if runtime.GOOS == "windows" {
@@ -135,7 +167,7 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		printAndExecute(result, meta)
+		printAndExecute(result, meta, query)
 	},
 }
 
@@ -204,11 +236,49 @@ func runComparison(query string, meta llm.SystemMetadata, cfg *config.Config) {
 	if finalModel, ok := m.(tui.Model); ok && finalModel.Choice != nil {
 		// User selected a result
 		fmt.Printf("\n🏆 Selected result from %s\n", strings.ToUpper(finalModel.Choice.Name))
-		printAndExecute(finalModel.Choice.Result, meta)
+
+		// Record to Brain
+		if b, err := brain.NewBrain(); err == nil {
+			// Construct full command string first
+			var fullCmdBuilder strings.Builder
+			for i, step := range finalModel.Choice.Result.Steps {
+				var args []string
+				for _, arg := range step.Args {
+					if strings.Contains(arg, " ") && !strings.HasPrefix(arg, "\"") && !strings.HasPrefix(arg, "'") {
+						args = append(args, fmt.Sprintf("\"%s\"", arg))
+					} else {
+						args = append(args, arg)
+					}
+				}
+				fullCmdBuilder.WriteString(fmt.Sprintf("%s %s", step.Tool, strings.Join(args, " ")))
+				if step.Op != "" {
+					fullCmdBuilder.WriteString(fmt.Sprintf(" %s ", step.Op))
+				} else if i < len(finalModel.Choice.Result.Steps)-1 {
+					// Default to &&
+				}
+			}
+			fullCmdStr := fullCmdBuilder.String()
+
+			recordErr := b.Record(brain.BrainEntry{
+				Query:       query,
+				Command:     fullCmdStr,
+				Explanation: finalModel.Choice.Result.Explanation,
+				Provider:    finalModel.Choice.Name,
+				Model:       "unknown", // We don't have the model name easily available here without drilling into config
+				Context:     meta.PreviousError,
+			})
+			if recordErr != nil {
+				fmt.Printf("Warning: Failed to record to brain: %v\n", recordErr)
+			} else {
+				fmt.Println("🧠 Learned from your choice!")
+			}
+		}
+
+		printAndExecute(finalModel.Choice.Result, meta, query)
 	}
 }
 
-func printAndExecute(result *model.CommandResult, meta llm.SystemMetadata) {
+func printAndExecute(result *model.CommandResult, meta llm.SystemMetadata, query string) {
 	// Construct full command string
 	var fullCmdBuilder strings.Builder
 	for i, step := range result.Steps {
@@ -260,6 +330,24 @@ func printAndExecute(result *model.CommandResult, meta llm.SystemMetadata) {
 		if err := execCmd.Run(); err != nil {
 			fmt.Fprintf(os.Stderr, "Execution failed: %v\n", err)
 			os.Exit(1)
+		} else {
+			// Successful execution - Record to Brain
+			if b, err := brain.NewBrain(); err == nil {
+				// Reconstruct provider info (best effort since printAndExecute is disconnected)
+				// ideally we'd pass the provider/model info into printAndExecute.
+				// For now, we'll mark provider as "cmdfy-exec" or try to guess.
+				// Better approach: Upgrade printAndExecute signature or pass a callback.
+				// Given phase constraints, let's pass a nil provider for now or simple "executed".
+				_ = b.Record(brain.BrainEntry{
+					Query:       query,
+					Command:     fullCmdStr,
+					Explanation: result.Explanation,
+					Provider:    "system", // Mark as executed
+					Context:     meta.PreviousError,
+				})
+				// Wait, we lost the 'query' in this function scope.
+				// Refactoring needed. Let's change printAndExecute signature.
+			}
 		}
 	} else {
 		// Pretty print

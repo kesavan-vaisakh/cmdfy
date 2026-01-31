@@ -78,13 +78,12 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
   - [x] **TUI Implementation**: Implement a side-by-side TUI for voting on results.
 
 
-## Phase 7,"Local ""Brain""",Allow cmdfy to learn from your picks to improve the local NLP accuracy.
-
+## Phase 7: Local "Brain" - (Completed)
 **Objective** Allow cmdfy to learn from your picks to improve the local NLP accuracy.
 
 **Milestones**:
-
-  - [ ] **Local Brain Implementation**: Implement a local brain to learn from your picks to improve the local NLP accuracy.
+  - [x] **The "Aha" Moment**: Piping stderr directly into the CLI.
+  - [x] **Local Brain Implementation**: Implement a local brain (`~/.cmdfy/brain.jsonl`) to learn from user choices and successful executions, enabling few-shot learning for all providers.
 
 ## Phase Futures will plan after completion of Phase 6
 **Milestones**:

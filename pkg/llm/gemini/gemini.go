@@ -49,6 +49,20 @@ func NewGeminiProvider(cfg llm.ProviderConfig) (llm.Provider, error) {
 func (p *GeminiProvider) GenerateCommand(ctx context.Context, query string, meta llm.SystemMetadata) (*model.CommandResult, error) {
 	commandsList := strings.Join(meta.AvailableCommands, ", ")
 	filesList := strings.Join(meta.CurrentDirFiles, ", ")
+
+	previousErrorSection := ""
+	if meta.PreviousError != "" {
+		previousErrorSection = fmt.Sprintf("\n\nTHE USER IS TRYING TO FIX A COMMAND THAT FAILED.\nError output:\n%s\n\nAnalyze this error and generate a fixed command.", meta.PreviousError)
+	}
+
+	examplesSection := ""
+	if len(meta.FewShotExamples) > 0 {
+		examplesSection = "\n\nReference - Here are similar commands the user has used before:\n"
+		for _, ex := range meta.FewShotExamples {
+			examplesSection += fmt.Sprintf("- Query: %s\n  Command: %s\n  Origin: %s\n", ex.Query, ex.Command, ex.Provider)
+		}
+	}
+
 	prompt := fmt.Sprintf(`
 You are a command line expert. 
 Your task is to translate the following natural language request into a shell command or a pipeline of commands.
@@ -68,9 +82,9 @@ Respond ONLY with a valid JSON object matching this schema:
 Operating System: %s
 Shell: %s
 Available Tools: %s
-Current Directory Files: %s
+Current Directory Files: %s%s%s
 Request: %s
-`, meta.OS, meta.Shell, commandsList, filesList, query)
+`, meta.OS, meta.Shell, commandsList, filesList, examplesSection, previousErrorSection, query)
 
 	// Capture start time
 	startTime := time.Now()

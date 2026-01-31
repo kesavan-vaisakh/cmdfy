@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kesavan-vaisakh/cmdfy/pkg/brain"
 	"github.com/kesavan-vaisakh/cmdfy/pkg/model"
 )
 
@@ -13,6 +14,8 @@ type SystemMetadata struct {
 	Shell             string
 	AvailableCommands []string
 	CurrentDirFiles   []string
+	PreviousError     string
+	FewShotExamples   []brain.BrainEntry
 }
 
 // Provider defines the interface for an LLM provider

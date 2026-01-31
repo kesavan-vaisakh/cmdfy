@@ -75,6 +75,19 @@ func (p *OllamaProvider) GenerateCommand(ctx context.Context, query string, meta
 		availableToolsSuffix = " (and others)"
 	}
 
+	previousErrorSection := ""
+	if meta.PreviousError != "" {
+		previousErrorSection = fmt.Sprintf("\n\nTHE USER IS TRYING TO FIX A COMMAND THAT FAILED.\nError output:\n%s\n\nAnalyze this error and generate a fixed command.", meta.PreviousError)
+	}
+
+	examplesSection := ""
+	if len(meta.FewShotExamples) > 0 {
+		examplesSection = "\n\nReference - Here are similar commands the user has used before:\n"
+		for _, ex := range meta.FewShotExamples {
+			examplesSection += fmt.Sprintf("- Query: %s\n  Command: %s\n  Origin: %s\n", ex.Query, ex.Command, ex.Provider)
+		}
+	}
+
 	prompt := fmt.Sprintf(`
 You are a command line expert.
 Your task is to translate the following natural language request into a shell command or a pipeline of commands.
@@ -96,9 +109,9 @@ Schema:
 
 Operating System: %s
 Shell: %s
-Available Tools: %s%s
+Available Tools: %s%s%s%s
 Request: %s
-`, meta.OS, meta.Shell, commandsList, availableToolsSuffix, query)
+`, meta.OS, meta.Shell, commandsList, availableToolsSuffix, examplesSection, previousErrorSection, query)
 
 	reqBody := ChatRequest{
 		Model: p.model,

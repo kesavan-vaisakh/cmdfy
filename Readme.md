@@ -77,6 +77,27 @@ Use the `-y` flag to execute the command immediately after it's generated.
 ./cmdfy -y "convert video.mov to a 720p version called video_720.mp4"
 ```
 
+### 4. Benchmarking Mode (`--compare`)
+
+Unsure which AI model is best? Run a benchmark!
+
+```bash
+./cmdfy "find all large files over 100MB" --compare
+```
+This opens an interactive TUI (Terminal User Interface) that runs your query against all configured providers (e.g., Ollama, Gemini, OpenAI) and shows the results side-by-side. 
+
+**Bonus:** When you pick a winner, `cmdfy` **memorizes** it to its Local Brain (`~/.cmdfy/brain.jsonl`), teaching your local models to be smarter next time.
+
+### 5. Error Fixing ("The Aha Moment")
+
+If a command fails, pipe the error output to `cmdfy` to fix it automatically.
+
+```bash
+# Example: Forgot to install a tool
+some_command_that_fails 2>&1 | cmdfy "fix this"
+```
+`cmdfy` reads the error from stdin, analyzes it, and suggests a corrected command.
+
 ## Project Roadmap
 
 This project is being developed in a phased approach. For a detailed breakdown of each phase, its milestones, and a more in-depth architectural overview, please see the dedicated [Phases Document](Phases.md).
