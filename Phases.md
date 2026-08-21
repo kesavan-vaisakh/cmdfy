@@ -85,7 +85,17 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
   - [x] **The "Aha" Moment**: Piping stderr directly into the CLI.
   - [x] **Local Brain Implementation**: Implement a local brain (`~/.cmdfy/brain.jsonl`) to learn from user choices and successful executions, enabling few-shot learning for all providers.
 
-## Phase Futures will plan after completion of Phase 6
+## Phase 8: Always-Active Mode & Inline Shell Expansion (|% ... %|) - (In Progress)
+**Objective**: Enable inline natural language tags within shell pipelines (e.g. `|% find large pdfs %| | grep report`) and an always-active interactive shell mode.
+
+**Milestones**:
+  - [ ] **Inline Tag Parser**: Parse and extract `|% ... %|` expressions with surrounding command prefix and suffix.
+  - [ ] **Context-Aware Pipeline Prompting**: Send surrounding shell context (pipes, redirects) to the LLM for seamless pipeline substitution.
+  - [ ] **Direct Inline Expansion**: Support processing inline expressions directly in `cmdfy "<cmd with |% ... %|>"`.
+  - [ ] **Interactive REPL (`cmdfy shell`)**: Always-active interactive subshell that intercepts commands with `|% ... %|`, expands and explains them before execution.
+  - [ ] **Shell Integration (`cmdfy init`)**: Generate shell integration scripts for Zsh and Bash for in-terminal widget expansion.
+
+## Phase Futures will plan after completion of Phase 8
 **Milestones**:
 
   - [ ] **Future Planning**: Plan for future features and improvements.
