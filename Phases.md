@@ -85,16 +85,17 @@ This document outlines the strategic roadmap for the development of **cmdfy**. E
   - [x] **The "Aha" Moment**: Piping stderr directly into the CLI.
   - [x] **Local Brain Implementation**: Implement a local brain (`~/.cmdfy/brain.jsonl`) to learn from user choices and successful executions, enabling few-shot learning for all providers.
 
-## Phase 8: Always-Active Mode & Inline Shell Expansion (|% ... %|) - (In Progress)
-**Objective**: Enable inline natural language tags within shell pipelines (e.g. `|% find large pdfs %| | grep report`), an always-active interactive shell mode, and conversational command fine-tuning.
+## Phase 8: Inline Shell Expansion (|% ... %|) - (In Progress)
+**Objective**: Let users drop a natural-language fragment into a command they're already writing, and resolve it in place with surrounding shell context.
 
 **Milestones**:
-  - [ ] **Inline Tag Parser**: Parse and extract `|% ... %|` expressions with surrounding command prefix and suffix.
-  - [ ] **Context-Aware Pipeline Prompting**: Send surrounding shell context (pipes, redirects) to the LLM for seamless pipeline substitution.
-  - [ ] **Direct Inline Expansion**: Support processing inline expressions directly in `cmdfy "<cmd with |% ... %|>"`.
-  - [ ] **Interactive REPL (`cmdfy shell`)**: Always-active interactive subshell that intercepts commands with `|% ... %|`, expands and explains them before execution.
-  - [ ] **Conversational Command Fine-Tuning**: Multi-turn refinement loop in `cmdfy shell` allowing users to provide natural language feedback or manually edit commands before running.
-  - [ ] **Shell Integration (`cmdfy init`)**: Generate shell integration scripts for Zsh and Bash for in-terminal widget expansion.
+  - [ ] **P0 — Sigil Validation Spike**: Confirm `|% … %|` survives real ZLE widget reading `$BUFFER` and Bash's `READLINE_LINE`.
+  - [ ] **P0 — Inline Tag Parser**: Robust extraction of tag(s) plus prefix/suffix. Explicit rules for multiple tags per line, rejecting nested tags, and quotes/backticks inside tags.
+  - [ ] **P0 — Context-Aware Pipeline Prompting**: Send surrounding pipes, redirects, available tools, and cwd fingerprint to the LLM.
+  - [ ] **P0 — Confirmation Surface**: Render the fully resolved line with the expanded region visually distinct (highlight/color). Never auto-execute without explicit user confirmation.
+  - [ ] **P1 — Direct Inline Expansion**: `cmdfy "<cmd with |% … %|>"` quoted-arg path with immediate usability without shell integration setup.
+  - [ ] **P1 — Latency Budget + Cache**: Target <1s. Cache resolved expansions keyed on `tag text + cwd fingerprint`; check local brain before cloud provider.
+  - [ ] **P1 — Shell Integration (`cmdfy init`)**: Generate Zsh (ZLE) and Bash (Readline) scripts for seamless in-line terminal widget expansion.
 
 ## Phase Futures will plan after completion of Phase 8
 **Milestones**:
